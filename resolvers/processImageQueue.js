@@ -16,7 +16,8 @@ const blobHostName = "https://" + storageAccount + ".blob.core.windows.net/" + C
 function getQueueMessage(image){
     var message = {
         job_definition: {
-            id: image.batchId,
+            id: image.blobName,
+            batchId: image.batchId,
             input: {
                 image_url: blobHostName + image.batchId + "/" + image.blobName,
                  image_parameters: {
