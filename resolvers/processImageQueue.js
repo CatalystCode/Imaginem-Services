@@ -7,7 +7,7 @@ const AZURE_STORAGE_RETRY_INTERVAL = 1000;
 const TextBase64QueueMessageEncoder = azure.QueueMessageEncoder.TextBase64QueueMessageEncoder;
 const ASYNC_QUEUE_LIMIT = 20;
 const retryOperations = new azure.LinearRetryPolicyFilter(AZURE_STORAGE_RETRY_COUNT, AZURE_STORAGE_RETRY_INTERVAL);
-const PIPELINE = ["generalclassificationinput",  "ocrinput", "facedetectioninput", "faceprintinput", "pipelineoutput" ];
+const PIPELINE = ["generalclassificationinput",  "ocrinput", "facedetectioninput", "faceprintinput", "facematchinput", "pipelineoutput" ];
 const MESSAGE_QUEUE = PIPELINE[0];
 const connString = process.env.AZURE_STORAGE_CONNECTION_STRING;
 const storageAccount = parseStorageAccount(connString, "AccountName");
@@ -17,13 +17,13 @@ function getQueueMessage(image){
     var message = {
         job_definition: {
             id: image.blobName,
-            batchId: image.batchId,
+            batch_id: image.batchId,
             input: {
-                image_url: blobHostName + image.batchId + "/" + image.blobName,
+                 image_url: blobHostName + image.batchId + "/" + image.blobName,
                  image_parameters: {
-                    lastModifiedDate: image.lastModifiedDate,
-                    originalName: image.originalName,
-                    mimeType: image.type,
+                    last_modified_date: image.lastModifiedDate,
+                    original_name: image.originalName,
+                    mime_type: image.type,
                     size: image.size,
                     width: image.width
                 }
@@ -44,7 +44,6 @@ function publishMessage(service, image, callback){
                 console.log('error occured posting to queue');
                 callback(error);
             }else{
-                console.log('posted to queue');
                 callback();
             }
     });
@@ -88,7 +87,6 @@ module.exports = {
     var processedMessages = 0;
     const service = getAzureStorageQueueService();
     
-    console.log('called');
     if(inputImageQueue && inputImageQueue.length > 0){
         asyncEachLimit(inputImageQueue, ASYNC_QUEUE_LIMIT, function(image, cb){
                 publishMessage(service, image, cb);
