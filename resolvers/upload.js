@@ -23,7 +23,7 @@ module.exports = {
                 if(!batchId){
                     let errMsg = 'Batch ID is undefined error';
                     console.error(errMsg);
-                    return res.status(500).send({ error: errMsg })
+                    return res.status(500).send({ error: errMsg });
                 }
 
                 var blobId = guid();

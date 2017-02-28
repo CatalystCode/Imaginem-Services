@@ -1,7 +1,7 @@
 var azure = require('azure-storage');
 var asyncEachLimit = require('async/eachLimit');
+var utils = require('../globals');
 
-const CONTAINER = "inputimages";
 const AZURE_STORAGE_RETRY_COUNT = 3;
 const AZURE_STORAGE_RETRY_INTERVAL = 1000;
 const TextBase64QueueMessageEncoder = azure.QueueMessageEncoder.TextBase64QueueMessageEncoder;
@@ -9,9 +9,6 @@ const ASYNC_QUEUE_LIMIT = 20;
 const retryOperations = new azure.LinearRetryPolicyFilter(AZURE_STORAGE_RETRY_COUNT, AZURE_STORAGE_RETRY_INTERVAL);
 const PIPELINE = ["generalclassificationinput",  "ocrinput", "facedetectioninput", "facecropinput", "facematchinput", "pipelineoutput" ];
 const MESSAGE_QUEUE = PIPELINE[0];
-const connString = process.env.AZURE_STORAGE_CONNECTION_STRING;
-const storageAccount = parseStorageAccount(connString, "AccountName");
-const blobHostName = "https://" + storageAccount + ".blob.core.windows.net/" + CONTAINER + "/";
 
 function getQueueMessage(image){
     var message = {
@@ -19,7 +16,7 @@ function getQueueMessage(image){
             id: image.blobName,
             batch_id: image.batchId,
             input: {
-                 image_url: blobHostName + image.batchId + "/" + image.blobName,
+                 image_url: utils.blobImagePath(image.batchId, image.blobName),
                  image_parameters: {
                     last_modified_date: image.lastModifiedDate,
                     original_name: image.originalName,
@@ -51,20 +48,6 @@ function publishMessage(service, image, callback){
      console.log('error occured with connecting to the queue ' + MESSAGE_QUEUE + ' error: ' + ex);
      callback(ex);
   }
-}
-
-function parseStorageAccount(connectionString, key){
-          let matchedPosition = connectionString.indexOf(key);
-
-          if(matchedPosition > -1){
-              matchedPosition++;
-              let endPosition = connectionString.indexOf(";", matchedPosition);
-              endPosition = endPosition === -1 ? connectionString.length: endPosition;
-              
-              return connectionString.substring(matchedPosition + key.length, endPosition); 
-          }else{
-              return undefined;
-          }
 }
 
 function getAzureStorageQueueService(){

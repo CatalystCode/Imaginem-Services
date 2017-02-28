@@ -7,6 +7,7 @@
     "azure-storage": "^2.0.0",
     "body-parser": "^1.16.1",
     "express": "^4.14.1",
+    "mssql": "^3.3.0",
     "multiparty": "^4.1.3"
   }
 }
