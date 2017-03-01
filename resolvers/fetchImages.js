@@ -3,7 +3,6 @@ let utils = require('../globals');
 let mssqlDriver = require('../drivers/mssql');
 
 const AZURE_TBL_BATCH_IMGS = "pipelinelogs";
-const QUERY = "select top 20 * from pipeline_output order by timestamp desc";
 
 module.exports = {
     fetchImagesFromBatchId: function(req, res){
@@ -44,6 +43,15 @@ module.exports = {
       });
     },
     fetchRecentImages: function(req, res){
+         const offset = req.query.offset;
+         const limit = req.query.limit;
+
+        if(!offset || !limit){
+           return res.status(500).send({ error: 'offset is not defined' });
+        }
+
+        const QUERY = `select * from pipeline_output order by timestamp desc OFFSET ${offset} ROWS FETCH NEXT ${limit} ROWS ONLY`;
+
         let queryCallbackHandler = function(recordset, res) {
            res.send({batches: recordset.map(function(image){
                 let jsonResponse = JSON.parse(image.job_output);
