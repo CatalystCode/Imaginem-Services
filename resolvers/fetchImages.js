@@ -27,7 +27,7 @@ module.exports = {
                                 facecrop_output: image.facecrop_output ? JSON.parse(image.facecrop_output._) : undefined,
                                 facedetection_output: image.facedetection_output ? JSON.parse(image.facedetection_output._) : undefined,
                                 facematch_output: image.facematch_output ? JSON.parse(image.facematch_output._) : undefined,
-                                general_classification_output: image.general_classification_output ? JSON.parse(image.general_classification_output._) : undefined,
+                                general_classification_output: image.generalclassification ? JSON.parse(image.generalclassification._) : undefined,
                                 ocr_output: image.ocr_output ? JSON.parse(image.ocr_output._) : undefined,
                                 url: utils.blobImagePath(batchId, image.RowKey._)
                             }
@@ -61,7 +61,7 @@ module.exports = {
                     batch_id: image.batch_id,
                     timestamp: image.timestamp,
                     url: image.image_url,
-                    general_classification_output: jsonResponse.general_classification,
+                    general_classification_output: jsonResponse.generalclassification,
                     facecrop_output: jsonResponse.facecrop,
                     facedetection: jsonResponse.facedetection
                 };
