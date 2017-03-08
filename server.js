@@ -38,8 +38,12 @@ app.get('/api/fetchImagesFromBatchId', function(req, res) {
     imageResolver.fetchImagesFromBatchId(req, res);
 });
 
-app.get('/api/fetchRecentImages', function(req, res) {
+app.post('/api/fetchRecentImages', function(req, res) {
     imageResolver.fetchRecentImages(req, res);
+});
+
+app.get('/api/fetchTagList', function(req, res) {
+    imageResolver.fetchTagList(req, res);
 });
 
 app.listen(process.env.PORT || 5000);

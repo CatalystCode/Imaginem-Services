@@ -43,14 +43,46 @@ module.exports = {
       });
     },
     fetchRecentImages: function(req, res){
-         const offset = req.query.offset;
-         const limit = req.query.limit;
+         const reqBody = req.body.requestBody;
+         const offset = reqBody.offset;
+         const limit = reqBody.limit;
+         const selectedTags = reqBody.selectedTags;
+         let whereClause = '';
 
-        if(!offset || !limit){
-           return res.status(500).send({ error: 'offset is not defined' });
+        if(selectedTags.length > 0){
+            let groupedFilters = {tags: [], categories: []};
+            let tagsCrossApply, catsCrossApply, catsValues, tagsValues;
+            
+            selectedTags.forEach(function(el){
+                groupedFilters[el.value.type].push(el.label);
+            });
+
+            if(groupedFilters.tags.length > 0){
+                tagsCrossApply = `CROSS APPLY OPENJSON(a.tagsJSON, '$') WITH (name varchar(500)) AS tags_output `;
+                tagsValues = groupedFilters.tags.join("','")
+            }
+
+            if(groupedFilters.categories.length > 0){
+                catsCrossApply = `CROSS APPLY OPENJSON(a.categoriesJSON, '$') WITH (name varchar(500)) AS cats_output `;
+                catsValues = groupedFilters.categories.join("','")
+            }
+
+            whereClause = `, (
+                            SELECT distinct id from pipeline_output as a 
+                            ${catsCrossApply ? catsCrossApply : ''}  
+                            ${tagsCrossApply ? tagsCrossApply : ''} 
+                            WHERE ${catsCrossApply ? "cats_output.name IN('" + catsValues + "')" : ""}
+                                  ${catsCrossApply && tagsCrossApply ? ' OR ' : ''}
+                                  ${tagsCrossApply ? "tags_output.name IN('" + tagsValues + "')": ""}
+                           ) as f
+                           WHERE b.id = f.id`;
         }
 
-        const QUERY = `select * from pipeline_output order by timestamp desc OFFSET ${offset} ROWS FETCH NEXT ${limit} ROWS ONLY`;
+        const QUERY = `select b.* from pipeline_output as b
+                       ${whereClause}
+                       order by timestamp desc 
+                       OFFSET ${offset} ROWS FETCH NEXT ${limit} ROWS ONLY`;
+        //console.log(QUERY);
 
         let queryCallbackHandler = function(recordset, res) {
            res.send({batches: recordset.map(function(image){
@@ -66,6 +98,25 @@ module.exports = {
                     facedetection: jsonResponse.facedetection
                 };
            })});
+        };
+
+        mssqlDriver.invokeCommand(res, QUERY, queryCallbackHandler);
+    },
+    fetchTagList: function(req, res){
+        const QUERY = `select distinct name as label, 'tags' as type from pipeline_output as a CROSS APPLY OPENJSON(a.tagsJSON, '$') WITH (name varchar(500)) AS job_output UNION select distinct name as tag, 'categories' as type from pipeline_output as a CROSS APPLY OPENJSON(a.categoriesJSON, '$') WITH (name varchar(500)) AS job_output`;
+        console.log(QUERY);
+
+
+        let queryCallbackHandler = function(recordset, res) {
+           let response = {tags: [], categories: []};
+
+           recordset.forEach(function(tag){
+                if(response[tag.type]){
+                    response[tag.type].push(tag.label);
+                }
+           });
+
+           res.send({filters: response});
         };
 
         mssqlDriver.invokeCommand(res, QUERY, queryCallbackHandler);

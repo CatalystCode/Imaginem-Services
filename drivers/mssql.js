@@ -1,7 +1,5 @@
-//var mssql = require('tedious');
 var mssql = require('mssql');
 var utils = require('../globals');
-
 const SQL_SERVER_CONNECTION_STRING = process.env.SQL_SERVER_CONNECTION_STRING;
 
 let config = {  
@@ -11,24 +9,32 @@ let config = {
             database: utils.parseStorageAccount(SQL_SERVER_CONNECTION_STRING, "Initial Catalog"),
             options: {
                 encrypt: true
+            },
+            pool: {
+                max: 50,
+                min: 2
             }
 };
 
+const cp = new mssql.Connection(config);
+
+cp.on('error', function(err) {
+      console.error('connection pool exception ' + err);
+});
+
+cp.connect().then(function() {
+      console.log('Connection pool open for duty');
+}).catch(function(err) {
+      console.error('exception ' + err);
+});
+
 module.exports = {
  invokeCommand(res, query, queryCallbackHandler){
-     //var connection = new mssql.Connection(config);
-
-    try{
-        mssql.connect(config).then(function() {
-            new mssql.Request()
-                .query(query).then(function(recordset) {
+        new mssql.Request(cp)
+            .query(query).then(function(recordset) {
                     queryCallbackHandler(recordset, res);
-                }).catch(function(err) {
-                    console.log('an error occured ' + err);
-                });
-        });
-    }catch(err){
-        console.log('exception ' + err);
-    }
- }
+            }).catch(function(err) {
+                    console.error('an error occured ' + err);
+            });
+        }
 };
