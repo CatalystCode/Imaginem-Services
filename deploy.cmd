@@ -118,13 +118,13 @@ set SQLCMDPASSWORD=%SQL_PASSWORD%
 set SQLCMDUSER=%SQL_USERNAME%
 
 
-for %%F IN ("%currentdir%\ddl\*.sql") do (
-    @echo %%F
-	@echo %SQLCMDPASSWORD%
-    @echo %SQLCMDUSER%
-    call :ExecuteCmd "%sqlRunner%" -S "%SQL_SERVER%" -d "%DB_NAME%" -i "%%F" -b
-    if ERRORLEVEL 1 GOTO ERROR
-)
+::for %%F IN ("%currentdir%\ddl\*.sql") do (
+::    @echo %%F
+::	  @echo %SQLCMDPASSWORD%
+::    @echo %SQLCMDUSER%
+::    call :ExecuteCmd "%sqlRunner%" -S "%SQL_SERVER%" -d "%DB_NAME%" -i "%%F" -b
+::    if ERRORLEVEL 1 GOTO ERROR
+::)
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 goto end
 
